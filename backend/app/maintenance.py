@@ -86,3 +86,20 @@ def get_stats(
         "pending": pending,
         "users": total_users
     }
+
+# Payment History
+@router.get("/user/{user_id}")
+def get_user_payment_history(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(utils.get_current_user)
+):
+    # 🔒 security (optional but recommended)
+    if current_user.get("role") != "ADMIN" and current_user.get("id") != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    payments = db.query(models.Maintenance).filter(
+        models.Maintenance.user_id == user_id
+    ).all()
+
+    return payments

@@ -6,6 +6,10 @@ import random
 import uuid
 import os
 import shutil
+from fastapi import Query
+
+from typing import Optional
+from fastapi import Query
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -36,9 +40,7 @@ def register(user: schemas.RegisterSchema, db: Session = Depends(get_db)):
     return {"message": "Admin registered successfully"}
 
 
-# =========================
-# 🔐 LOGIN
-# =========================
+#  LOGIN
 @router.post("/login")
 def login(user: schemas.LoginSchema, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -131,21 +133,30 @@ def reset_password(data: schemas.ResetPassword, db: Session = Depends(get_db)):
 
 # Admin Can Approve Resident Account 
 @router.put("/approve-user/{user_id}")
-def approve_user(user_id: int, flat_id: int, db: Session = Depends(get_db), admin=Depends(utils.admin_required)):
-
+def approve_user(
+    user_id: int,
+    flat_id: Optional[int] = Query(None),   # ✅ optional now
+    db: Session = Depends(get_db),
+    admin=Depends(utils.admin_required)
+):
     user = db.query(models.User).filter(models.User.id == user_id).first()
-    flat = db.query(models.Flat).filter(models.Flat.id == flat_id).first()
 
-    if not flat:
-        raise HTTPException(status_code=400, detail="Invalid flat")
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-    user.flat_id = flat_id   # 🔥 assign here
+    # ✅ APPROVE USER
     user.is_approved = True
+
+    # ✅ ONLY ASSIGN FLAT FOR RESIDENT
+    if user.role == "RESIDENT":
+        if not flat_id:
+            raise HTTPException(status_code=400, detail="Flat is required for resident")
+
+        user.flat_id = flat_id
 
     db.commit()
 
-    return {"message": "Approved + Flat Assigned"}
-
+    return {"message": f"{user.role} approved successfully"}
 @router.get("/pending-users")
 def get_pending_users(
     db: Session = Depends(get_db),
@@ -245,6 +256,8 @@ def all_complaints(db: Session = Depends(get_db), admin=Depends(utils.admin_requ
         for c in complaints
     ]
 
+
+
 @router.put("/complaint/{id}")
 def update_status(
     id: int,
@@ -272,3 +285,65 @@ def update_status(
         "message": "Status updated successfully",
         "new_status": status
     }
+
+@router.get("/watchmen")
+def get_all_watchmen(
+    db: Session = Depends(get_db),
+    admin=Depends(utils.admin_required)
+):
+    return db.query(models.User).filter(
+        models.User.role == "WATCHMAN"
+    ).all()
+
+@router.get("/pending-watchmen")
+def get_pending_watchmen(
+    db: Session = Depends(get_db),
+    admin=Depends(utils.admin_required)
+):
+    return db.query(models.User).filter(
+        models.User.role == "WATCHMAN",
+        models.User.is_verified == True,
+        models.User.is_approved == False
+    ).all()
+
+@router.delete("/watchman/{user_id}")
+def delete_watchman(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin=Depends(utils.admin_required)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.role != "WATCHMAN":
+        raise HTTPException(status_code=400, detail="Not a watchman")
+
+    db.delete(user)
+    db.commit()
+
+    return {"message": "Watchman deleted successfully"}
+
+
+@router.get("/all-users")
+def get_all_users(
+    db: Session = Depends(get_db),
+    admin=Depends(utils.admin_required)
+):
+    users = db.query(models.User).all()
+
+    result = []
+    for u in users:
+        result.append({
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role,
+            "is_approved": u.is_approved,
+            "flat_id": u.flat_id,
+            "flat_number": u.flat.flat_number if u.flat else None,  # ✅ FIX
+            "block": u.flat.block if u.flat else None               # ✅ FIX
+        })
+
+    return result

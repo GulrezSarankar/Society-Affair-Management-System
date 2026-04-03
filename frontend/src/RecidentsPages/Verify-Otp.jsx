@@ -17,20 +17,20 @@ function VerifyOTP() {
       alert("Please enter OTP");
       return;
     }
-
+  
     try {
       setLoading(true);
-
-      await API.post("/auth/verify-otp", {
+  
+      await API.post("/resident/verify-otp", {   // ✅ FIX endpoint also
         email,
         otp
       });
-
-      alert("OTP Verified ✅");
-
-      // 👉 Go to reset password page
-      navigate("/reset", { state: { email } });
-
+  
+      alert("Account verified successfully ✅");
+  
+      // 👉 Go to login page
+      navigate("/login");
+  
     } catch (err) {
       console.error(err);
       alert("Invalid OTP ❌");

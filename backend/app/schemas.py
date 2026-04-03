@@ -66,13 +66,12 @@ class MaintenanceResponse(BaseModel):
         from_attributes = True
 
 
-class ResidentRegister(BaseModel):
+class ResidentCreate(BaseModel):
     name: str
     email: str
     password: str
-
 class LoginSchema(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 class ForgotPassword(BaseModel):
@@ -90,3 +89,13 @@ class ResetPassword(BaseModel):
 class ComplaintCreate(BaseModel):
     title: str
     description: str
+
+class ApproveUser(BaseModel):
+    flat_id: int
+
+class VisitorCreate(BaseModel):
+    name: str
+    phone: str
+    purpose: str
+    resident_id: int
+    

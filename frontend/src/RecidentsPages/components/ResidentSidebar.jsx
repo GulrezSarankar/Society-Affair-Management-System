@@ -38,6 +38,11 @@ const ResidentSidebar = ({ isOpen, setIsOpen }) => {
       path: "/resident-complaint-history",
       icon: Wallet,
     },
+    {
+      name: "Payment History",
+      path: "/payment-history",
+      icon: Wallet,
+    },
   ];
 
   return (

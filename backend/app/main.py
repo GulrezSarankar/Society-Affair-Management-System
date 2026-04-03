@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.maintenance import router as maintenance_router
 from app.Resident import router as resident_router
 from fastapi.staticfiles import StaticFiles
-
+from app.Watchman import router as watchman_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(watchman_router)
 app.include_router(flat_router)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 

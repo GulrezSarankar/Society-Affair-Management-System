@@ -9,12 +9,10 @@ import os
 import uuid
 
 
-router = APIRouter(prefix="/resident", tags=["Resident"])
+router = APIRouter(prefix="/resident", tags=["Resident/User"])
 
 
-# =========================
-# 📝 REGISTER RESIDENT + OTP
-# =========================
+#  REGISTER RESIDENT + OTP
 @router.post("/register")
 def register_resident(
     user: schemas.ResidentCreate,
@@ -52,9 +50,7 @@ def register_resident(
     return {"message": "OTP sent to email"}
 
 
-# =========================
-# ✅ VERIFY OTP
-# =========================
+#  VERIFY OTP
 @router.post("/verify-otp")
 def verify_otp(data: schemas.VerifyOTP, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == data.email).first()
@@ -72,32 +68,37 @@ def verify_otp(data: schemas.VerifyOTP, db: Session = Depends(get_db)):
     return {"message": "Email verified. Wait for admin approval"}
 
 
-# =========================
-# 🔐 LOGIN RESIDENT
-# =========================
+#  LOGIN RESIDENT
 @router.post("/login")
 def login_resident(
     user: schemas.LoginSchema,
     db: Session = Depends(get_db)
 ):
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    db_user = db.query(models.User).filter(
+        models.User.email == user.email
+    ).first()
 
+    # ❌ User not found
     if not db_user:
-        raise HTTPException(status_code=400, detail="Invalid email or password")
+        raise HTTPException(status_code=404, detail="User not found")
 
+    # ❌ Wrong password
     if not utils.verify_password(user.password, db_user.password):
-        raise HTTPException(status_code=400, detail="Invalid email or password")
+        raise HTTPException(status_code=400, detail="Wrong password")
 
+    # ❌ Wrong role
     if db_user.role != "RESIDENT":
         raise HTTPException(status_code=403, detail="Not a resident account")
 
-    # 🔥 NEW CHECKS
+    # ❌ Not verified
     if not db_user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
 
+    # ❌ Not approved
     if not db_user.is_approved:
-        raise HTTPException(status_code=403, detail="Waiting for admin approval")
+        raise HTTPException(status_code=403, detail="You are not approved yet")
 
+    # ✅ SUCCESS
     token = utils.create_access_token({
         "sub": db_user.email,
         "role": db_user.role,
@@ -115,8 +116,6 @@ def login_resident(
             "flat_id": db_user.flat_id
         }
     }
-
-
 # =========================
 # 👤 GET PROFILE
 # =========================

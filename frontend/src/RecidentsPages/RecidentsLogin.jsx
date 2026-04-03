@@ -21,21 +21,29 @@ function ResidentsLogin() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+  
     try {
-      const res = await API.post("/auth/login", form);
+      const res = await API.post("/resident/login", form); // ✅ FIX endpoint
+  
       localStorage.setItem("token", res.data.access_token);
+  
       if (res.data.user) {
         localStorage.setItem("user", JSON.stringify(res.data.user));
       }
+  
       navigate("/Resident-dashboard");
+  
     } catch (err) {
-      setError("Invalid credentials. Please verify your email and password.");
+      console.log("ERROR:", err.response?.data);
+  
+      // ✅ SHOW BACKEND MESSAGE
+      setError(
+        err.response?.data?.detail || "Login failed"
+      );
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-white font-sans">
       
@@ -154,7 +162,7 @@ function ResidentsLogin() {
 
           <div className="mt-10 text-center">
              <p className="text-sm text-slate-500 font-medium">
-               New resident? <button onClick={() => navigate("/request-access")} className="text-blue-600 font-bold hover:underline">Request Access</button>
+               New resident? <button onClick={() => navigate("/register")} className="text-blue-600 font-bold hover:underline">Register</button>
              </p>
           </div>
         </div>
