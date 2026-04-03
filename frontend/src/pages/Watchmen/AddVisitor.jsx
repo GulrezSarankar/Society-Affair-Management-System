@@ -49,7 +49,7 @@ export default function WatchmanAddVisitor() {
     setLoading(true);
     try {
       await API.post("/watchman/add", form);
-      navigate("/watchman/dashboard");
+      navigate("/watchman-dashboard");
     } catch (err) {
       alert(err.response?.data?.detail || "Entry failed");
     } finally {

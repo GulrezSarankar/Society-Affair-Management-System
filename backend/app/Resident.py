@@ -34,12 +34,12 @@ def register_resident(
     otp=otp,
     is_verified=False,
     is_approved=False,
-    flat_id=None   # ✅ IMPORTANT
+    flat_id=None 
 )
     db.add(new_user)
     db.commit()
 
-    # 📧 Send OTP
+    #  Send OTP
     utils.send_email(
         user.email,
         "Verify Your Email",
@@ -78,27 +78,27 @@ def login_resident(
         models.User.email == user.email
     ).first()
 
-    # ❌ User not found
+    #  User not found
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # ❌ Wrong password
+    #  Wrong password
     if not utils.verify_password(user.password, db_user.password):
         raise HTTPException(status_code=400, detail="Wrong password")
 
-    # ❌ Wrong role
+    #  Wrong role
     if db_user.role != "RESIDENT":
         raise HTTPException(status_code=403, detail="Not a resident account")
 
-    # ❌ Not verified
+    #  Not verified
     if not db_user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
 
-    # ❌ Not approved
+    #  Not approved
     if not db_user.is_approved:
         raise HTTPException(status_code=403, detail="You are not approved yet")
 
-    # ✅ SUCCESS
+    #  SUCCESS
     token = utils.create_access_token({
         "sub": db_user.email,
         "role": db_user.role,
@@ -116,9 +116,62 @@ def login_resident(
             "flat_id": db_user.flat_id
         }
     }
-# =========================
-# 👤 GET PROFILE
-# =========================
+
+@router.post("/send-otp")
+def send_otp(data: schemas.ForgotPassword, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    otp = str(random.randint(100000, 999999))
+
+    user.otp = otp
+    db.commit()
+
+    utils.send_email(
+        user.email,
+        "Password Reset OTP",
+        "Use this OTP to reset your password",
+        otp=otp
+    )
+
+    return {"message": "OTP sent successfully"}
+
+
+#  VERIFY OTP (FIXED)
+@router.post("/verify-otp")
+def verify_otp(data: schemas.VerifyOTP, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not user.otp:
+        raise HTTPException(status_code=400, detail="OTP not found")
+
+    if user.otp != data.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
+
+    return {"message": "OTP verified successfully"}
+
+
+#  RESET PASSWORD
+@router.post("/reset-password")
+def reset_password(data: schemas.ResetPassword, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    hashed_password = utils.hash_password(data.new_password)
+
+    user.password = hashed_password
+    user.otp = None   # clear OTP
+    db.commit()
+
+    return {"message": "Password updated successfully"}
+#  GET PROFILE
 @router.get("/profile")
 def get_profile(user=Depends(utils.get_current_user), db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(
@@ -135,9 +188,7 @@ def get_profile(user=Depends(utils.get_current_user), db: Session = Depends(get_
         }
     }
 
-# =========================
-# 💰 VIEW OWN MAINTENANCE
-# =========================
+#  VIEW OWN MAINTENANCE
 @router.get("/my-maintenance")
 def my_maintenance(
     user=Depends(utils.get_current_user),
@@ -155,9 +206,7 @@ def my_maintenance(
     return data
 
 
-# =========================
-# 💳 PAY MAINTENANCE
-# =========================
+#  PAY MAINTENANCE
 @router.post("/pay/{maintenance_id}")
 def pay_maintenance(
     maintenance_id: int,
@@ -191,7 +240,7 @@ def create_complaint(
         models.User.email == user.get("sub")
     ).first()
 
-    # 🔥 ABSOLUTE PATH FIX (IMPORTANT)
+    #  ABSOLUTE PATH FIX (IMPORTANT)
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     UPLOAD_DIR = os.path.join(BASE_DIR, "..", "uploads")
 
@@ -200,13 +249,13 @@ def create_complaint(
     image_path = None
 
     if image:
-        # 🔥 CLEAN NAME + UNIQUE
+        # CLEAN NAME + UNIQUE
         clean_name = image.filename.replace(" ", "_")
         filename = f"{uuid.uuid4()}_{clean_name}"
 
         file_path = os.path.join(UPLOAD_DIR, filename)
 
-        # 🔥 SAVE FILE
+        #  SAVE FILE
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
 
@@ -255,3 +304,4 @@ def my_complaints(user=Depends(utils.get_current_user), db: Session = Depends(ge
 #     return db.query(models.Complaint).filter(
 #         models.Complaint.user_id == db_user.id
 #     ).all()
+

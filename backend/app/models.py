@@ -4,7 +4,7 @@ from app.database import Base
 from datetime import datetime
 
 
-# 🔥 FLAT MODEL
+#  FLAT MODEL
 class Flat(Base):
     __tablename__ = "flats"
 
@@ -16,7 +16,7 @@ class Flat(Base):
     residents = relationship("User", back_populates="flat", cascade="all, delete")
 
 
-# 🔥 USER MODEL
+#  USER MODEL
 class User(Base):
     __tablename__ = "users"
 
@@ -35,7 +35,7 @@ class User(Base):
 
     flat = relationship("Flat", back_populates="residents")
 
-    # ✅ RELATIONS WITH CASCADE
+    #  RELATIONS WITH CASCADE
     maintenances = relationship(
         "Maintenance",
         back_populates="user",
@@ -55,7 +55,7 @@ class User(Base):
     )
 
 
-# 🔥 MAINTENANCE MODEL
+#  MAINTENANCE MODEL
 class Maintenance(Base):
     __tablename__ = "maintenance"
 
@@ -70,7 +70,7 @@ class Maintenance(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-# 🔥 COMPLAINT MODEL (FIXED)
+#  COMPLAINT MODEL (FIXED)
 class Complaint(Base):
     __tablename__ = "complaints"
 
@@ -86,7 +86,7 @@ class Complaint(Base):
     user = relationship("User", back_populates="complaints")
 
 
-# 🔥 VISITOR MODEL
+#  VISITOR MODEL
 class Visitor(Base):
     __tablename__ = "visitors"
 

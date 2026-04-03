@@ -58,7 +58,7 @@ const ResidentRegister = () => {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12 cursor-pointer" onClick={() => navigate("/")}>
             <Building2 size={32} strokeWidth={2.5} />
-            <span className="text-2xl font-bold tracking-tight">SocietySync Pro</span>
+            <span className="text-2xl font-bold tracking-tight">Society Affair Management System</span>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight mb-8">

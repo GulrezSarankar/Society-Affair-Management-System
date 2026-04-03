@@ -1,4 +1,4 @@
-# 🔐 Password + JWT + Role-based Auth Utilities
+#  Password + JWT + Role-based Auth Utilities
 
 from passlib.context import CryptContext
 from jose import jwt, JWTError
@@ -11,9 +11,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from dotenv import load_dotenv
 
-# =========================
-# ✅ LOAD ENV VARIABLES (FIXED)
-# =========================
+#  LOAD ENV VARIABLES (FIXED)
 load_dotenv(dotenv_path=os.path.join(os.getcwd(), ".env"))
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -23,9 +21,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
 
-# =========================
-# 🔥 VALIDATION (VERY IMPORTANT)
-# =========================
+#  VALIDATION (VERY IMPORTANT)
 if not SECRET_KEY:
     raise Exception("❌ SECRET_KEY not set in .env")
 
@@ -38,7 +34,7 @@ print("EMAIL_USER:", EMAIL_USER)
 print("ALGORITHM:", ALGORITHM)
 
 # =========================
-# 🔑 Password Hashing
+#  Password Hashing
 # =========================
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -52,7 +48,7 @@ def verify_password(plain_password, hashed_password):
 
 
 # =========================
-# 🔐 JWT Token Creation (FIXED)
+#  JWT Token Creation (FIXED)
 # =========================
 def create_access_token(data: dict):
     try:
@@ -69,7 +65,7 @@ def create_access_token(data: dict):
 
 
 # =========================
-# 🔒 Token Authentication
+#  Token Authentication
 # =========================
 security = HTTPBearer()
 
@@ -85,7 +81,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
 
 
 # =========================
-# 👮 Admin Role Check
+#  Admin Role Check
 # =========================
 def admin_required(user=Depends(get_current_user)):
     if user.get("role") != "ADMIN":
@@ -94,7 +90,7 @@ def admin_required(user=Depends(get_current_user)):
 
 
 # =========================
-# 📧 EMAIL SENDER (FULL FIX)
+# EMAIL SENDER (FULL FIX)
 # =========================
 def send_email(to_email: str, subject: str, body: str, otp: str = None):
     try:

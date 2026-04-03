@@ -43,6 +43,11 @@ const ResidentSidebar = ({ isOpen, setIsOpen }) => {
       path: "/payment-history",
       icon: Wallet,
     },
+    {
+      name: "Resident Approval",
+      path: "/resident-approval",
+      icon: Wallet,
+    },
   ];
 
   return (

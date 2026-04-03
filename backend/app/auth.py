@@ -40,7 +40,6 @@ def register(user: schemas.RegisterSchema, db: Session = Depends(get_db)):
     return {"message": "Admin registered successfully"}
 
 
-#  LOGIN
 @router.post("/login")
 def login(user: schemas.LoginSchema, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -50,6 +49,10 @@ def login(user: schemas.LoginSchema, db: Session = Depends(get_db)):
 
     if not utils.verify_password(user.password, db_user.password):
         raise HTTPException(status_code=400, detail="Invalid email or password")
+
+    # 🔴 ADD THIS CHECK
+    if db_user.role.lower() != "admin":
+        raise HTTPException(status_code=403, detail="Only admin can login")
 
     token = utils.create_access_token({
         "sub": db_user.email,
@@ -69,73 +72,67 @@ def login(user: schemas.LoginSchema, db: Session = Depends(get_db)):
     }
 
 
-# =========================
-# 📩 SEND OTP
-# =========================
-@router.post("/send-otp")
-def send_otp(data: schemas.ForgotPassword, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+#  SEND OTP
+# @router.post("/send-otp")
+# def send_otp(data: schemas.ForgotPassword, db: Session = Depends(get_db)):
+#     user = db.query(models.User).filter(models.User.email == data.email).first()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
 
-    otp = str(random.randint(100000, 999999))
+#     otp = str(random.randint(100000, 999999))
 
-    user.otp = otp
-    db.commit()
+#     user.otp = otp
+#     db.commit()
 
-    utils.send_email(
-        user.email,
-        "Password Reset OTP",
-        "Use this OTP to reset your password",
-        otp=otp
-    )
+#     utils.send_email(
+#         user.email,
+#         "Password Reset OTP",
+#         "Use this OTP to reset your password",
+#         otp=otp
+#     )
 
-    return {"message": "OTP sent successfully"}
+#     return {"message": "OTP sent successfully"}
 
 
-# =========================
-# ✅ VERIFY OTP (FIXED)
-# =========================
-@router.post("/verify-otp")
-def verify_otp(data: schemas.VerifyOTP, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+# #  VERIFY OTP (FIXED)
+# @router.post("/verify-otp")
+# def verify_otp(data: schemas.VerifyOTP, db: Session = Depends(get_db)):
+#     user = db.query(models.User).filter(models.User.email == data.email).first()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
 
-    if not user.otp:
-        raise HTTPException(status_code=400, detail="OTP not found")
+#     if not user.otp:
+#         raise HTTPException(status_code=400, detail="OTP not found")
 
-    if user.otp != data.otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
+#     if user.otp != data.otp:
+#         raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    return {"message": "OTP verified successfully"}
+#     return {"message": "OTP verified successfully"}
 
 
-# =========================
-# 🔑 RESET PASSWORD
-# =========================
-@router.post("/reset-password")
-def reset_password(data: schemas.ResetPassword, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
+# #  RESET PASSWORD
+# @router.post("/reset-password")
+# def reset_password(data: schemas.ResetPassword, db: Session = Depends(get_db)):
+#     user = db.query(models.User).filter(models.User.email == data.email).first()
 
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
 
-    hashed_password = utils.hash_password(data.new_password)
+#     hashed_password = utils.hash_password(data.new_password)
 
-    user.password = hashed_password
-    user.otp = None   # clear OTP
-    db.commit()
+#     user.password = hashed_password
+#     user.otp = None   # clear OTP
+#     db.commit()
 
-    return {"message": "Password updated successfully"}
+#     return {"message": "Password updated successfully"}
 
 # Admin Can Approve Resident Account 
 @router.put("/approve-user/{user_id}")
 def approve_user(
     user_id: int,
-    flat_id: Optional[int] = Query(None),   # ✅ optional now
+    flat_id: Optional[int] = Query(None),   #  optional now
     db: Session = Depends(get_db),
     admin=Depends(utils.admin_required)
 ):
@@ -144,10 +141,10 @@ def approve_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # ✅ APPROVE USER
+    #  APPROVE USER
     user.is_approved = True
 
-    # ✅ ONLY ASSIGN FLAT FOR RESIDENT
+    #  ONLY ASSIGN FLAT FOR RESIDENT
     if user.role == "RESIDENT":
         if not flat_id:
             raise HTTPException(status_code=400, detail="Flat is required for resident")
@@ -272,7 +269,7 @@ def update_status(
     if not complaint:
         raise HTTPException(status_code=404, detail="Complaint not found")
 
-    # 🔥 VALIDATION (important)
+    #  VALIDATION (important)
     valid_status = ["PENDING", "IN_PROGRESS", "RESOLVED"]
 
     if status not in valid_status:

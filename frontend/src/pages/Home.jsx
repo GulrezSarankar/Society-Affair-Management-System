@@ -8,7 +8,8 @@ import {
   CheckCircle2,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert // Added for Watchman icon
 } from "lucide-react";
 import { useState } from "react";
 
@@ -22,22 +23,33 @@ export default function Home() {
       {/* --- NAVIGATION --- */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
             <div className="bg-blue-600 p-1.5 rounded-lg">
               <Building2 className="text-white" size={24} />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">SocietySync</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900">Soiety Affair Management System</span>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Features</a>
+          <div className="hidden md:flex items-center gap-6">
+            <a href="#features" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors mr-4">Features</a>
+            
             <button 
               onClick={() => navigate("/login")} 
               className="text-sm font-bold text-slate-900 hover:text-blue-600 transition-colors"
             >
               Resident Login
             </button>
+
+            {/* 🔥 WATCHMAN LINK */}
+            <button 
+              onClick={() => navigate("/watchmen-login")} 
+              className="flex items-center gap-1.5 text-sm font-bold text-orange-600 hover:text-orange-700 transition-colors bg-orange-50 px-3 py-2 rounded-lg"
+            >
+              <ShieldAlert size={16} />
+              Guard Login
+            </button>
+
             <button 
               onClick={() => navigate("/admin-login")} 
               className="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-600 transition-all shadow-lg shadow-slate-200"
@@ -56,13 +68,14 @@ export default function Home() {
         {isMenuOpen && (
           <div className="md:hidden bg-white border-b border-slate-100 p-6 space-y-4 animate-in slide-in-from-top-5">
             <button onClick={() => navigate("/login")} className="block w-full text-left font-bold text-slate-700">Resident Login</button>
+            <button onClick={() => navigate("/watchman-login")} className="block w-full text-left font-bold text-orange-600">Guard Login</button>
             <button onClick={() => navigate("/admin-login")} className="block w-full text-left font-bold text-blue-600">Admin Portal</button>
           </div>
         )}
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6">
+      <header className="relative pt-32 pb-12 lg:pt-48 lg:pb-24 px-6">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-gradient-to-b from-blue-50/50 to-transparent -z-10 rounded-full blur-3xl"></div>
         
         <div className="max-w-5xl mx-auto text-center">
@@ -75,10 +88,10 @@ export default function Home() {
             <span className="text-blue-600">Without the Stress.</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-            From automated maintenance billing to resident directories, SocietySync is the all-in-one digital operating system for modern living.
+            From automated maintenance billing to digital gate security, SocietySync is the all-in-one operating system for modern living.
           </p>
 
-          {/* Action Buttons */}
+          {/* Main Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
               onClick={() => navigate("/admin-login")}
@@ -91,6 +104,21 @@ export default function Home() {
               className="w-full sm:w-auto bg-white border-2 border-slate-200 text-slate-700 px-8 py-4 rounded-2xl font-bold text-lg hover:border-blue-600 hover:text-blue-600 transition-all flex items-center justify-center gap-2"
             >
               Resident Login <ChevronRight size={20} />
+            </button>
+          </div>
+
+          {/* 🔥 QUICK ACCESS FOR GUARDS (Hero Section) */}
+          <div className="mt-12 pt-12 border-t border-slate-100 max-w-md mx-auto">
+            <button 
+               onClick={() => navigate("/watchmen-login")}
+               className="flex items-center justify-center gap-3 w-full bg-orange-50 hover:bg-orange-100 text-orange-700 p-4 rounded-2xl border border-orange-200 transition-all group"
+            >
+              <ShieldAlert className="group-hover:rotate-12 transition-transform" />
+              <div className="text-left">
+                <p className="text-xs font-black uppercase tracking-widest leading-none">Security Personnel</p>
+                <p className="font-bold text-lg">Watchman Gate Console</p>
+              </div>
+              <ChevronRight className="ml-auto" />
             </button>
           </div>
         </div>
@@ -111,8 +139,8 @@ export default function Home() {
           />
           <FeatureCard 
             icon={<ShieldCheck className="text-purple-600" size={32} />}
-            title="Secure Access"
-            desc="Role-based permissions ensure that sensitive society data stays protected at all times."
+            title="Digital Gate Security"
+            desc="Watchmen can log visitors instantly and residents can approve entries from their phone."
           />
         </div>
       </section>
@@ -125,7 +153,7 @@ export default function Home() {
             <span className="font-bold text-slate-500">SocietySync © 2026</span>
           </div>
           <div className="flex items-center gap-6 text-sm font-bold text-slate-400">
-            <div className="flex items-center gap-1"><CheckCircle2 size={16} className="text-emerald-500"/> Real-time Sync</div>
+            <div className="flex items-center gap-1"><CheckCircle2 size={16} className="text-emerald-500"/> Gate Monitoring</div>
             <div className="flex items-center gap-1"><CheckCircle2 size={16} className="text-emerald-500"/> Cloud Secured</div>
           </div>
         </div>

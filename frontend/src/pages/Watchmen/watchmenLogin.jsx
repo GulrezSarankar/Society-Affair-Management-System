@@ -7,10 +7,12 @@ import {
   ShieldCheck, 
   ArrowRight, 
   Loader2, 
-  Building2,
   CheckCircle2,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle,
+  ArrowLeft,
+  UserPlus // Added for the register link icon
 } from "lucide-react";
 
 export default function WatchmanLogin() {
@@ -40,20 +42,19 @@ export default function WatchmanLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-white font-sans text-slate-900">
       
       {/* --- LEFT SIDE: SECURITY HERO SECTION --- */}
       <div className="hidden md:flex md:w-1/2 bg-slate-900 relative overflow-hidden flex-col justify-between p-12 lg:p-20 text-white">
-        {/* Abstract Security Decor */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px] -mr-40 -mt-40"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-slate-800/50 rounded-full blur-[80px] -ml-20 -mb-20"></div>
 
         <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-12 cursor-pointer" onClick={() => navigate("/")}>
-            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20">
+          <div className="flex items-center gap-3 mb-12 cursor-pointer group" onClick={() => navigate("/")}>
+            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
               <ShieldCheck size={28} strokeWidth={2.5} />
             </div>
-            <span className="text-2xl font-bold tracking-tight uppercase italic">Sync Guard</span>
+            <span className="text-2xl font-bold tracking-tight uppercase italic text-white">Society Affair Management System</span>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight mb-8">
@@ -66,17 +67,26 @@ export default function WatchmanLogin() {
         </div>
 
         <div className="relative z-10 flex gap-6 text-sm font-bold text-slate-500 uppercase tracking-[0.2em]">
-           <span className="flex items-center gap-2"><ShieldCheck size={16} className="text-blue-500"/> Secure Terminal</span>
-           <span className="flex items-center gap-2"><CheckCircle2 size={16} className="text-blue-500"/> Live Auth</span>
+           <span className="flex items-center gap-2 text-slate-300"><ShieldCheck size={16} className="text-blue-500"/> Secure Terminal</span>
+           <span className="flex items-center gap-2 text-slate-300"><CheckCircle2 size={16} className="text-blue-500"/> Live Auth</span>
         </div>
       </div>
 
       {/* --- RIGHT SIDE: LOGIN FORM --- */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-20 bg-slate-50">
+      <div className="flex-1 flex items-center justify-center p-6 md:p-12 lg:p-20 bg-slate-50 relative">
+        
+        <button 
+          onClick={() => navigate("/")}
+          className="absolute top-8 left-8 md:top-12 md:left-12 flex items-center gap-2 text-slate-500 hover:text-blue-600 font-bold text-sm uppercase tracking-widest transition-colors group"
+        >
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+          Back to Home
+        </button>
+
         <div className="w-full max-w-md">
           
           {/* Mobile-only Header */}
-          <div className="md:hidden flex flex-col items-center mb-10 text-center">
+          <div className="md:hidden flex flex-col items-center mb-10 text-center cursor-pointer" onClick={() => navigate("/")}>
              <div className="p-3 bg-slate-900 rounded-2xl shadow-xl mb-4 text-blue-500">
                 <ShieldCheck size={28} />
              </div>
@@ -89,14 +99,13 @@ export default function WatchmanLogin() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-2xl flex items-center gap-3 animate-shake">
+            <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm rounded-2xl flex items-center gap-3 animate-pulse">
               <AlertCircle size={18} />
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email Field */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Officer Email</label>
               <div className="relative group">
@@ -111,7 +120,6 @@ export default function WatchmanLogin() {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Access Key</label>
               <div className="relative group">
@@ -133,7 +141,6 @@ export default function WatchmanLogin() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -149,6 +156,19 @@ export default function WatchmanLogin() {
               )}
             </button>
           </form>
+
+          {/* 🔥 REGISTER / REQUEST ACCESS BUTTON */}
+          <div className="mt-8 text-center">
+            <p className="text-sm text-slate-500 font-medium">
+              New security officer?{" "}
+              <button 
+                onClick={() => navigate("/watchmen-register")} 
+                className="text-blue-600 font-bold hover:text-blue-700 hover:underline inline-flex items-center gap-1 transition-all"
+              >
+                Request Access <UserPlus size={14} />
+              </button>
+            </p>
+          </div>
 
           <div className="mt-12 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex items-start gap-3">
              <ShieldCheck className="text-blue-600 flex-shrink-0 mt-0.5" size={18} />
