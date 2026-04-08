@@ -29,6 +29,9 @@ import WatchmanRegister from "./pages/Watchmen/watchmenRegister";
 import WatchmanVerify from "./pages/Watchmen/watchmenVerify";
 import ForgotVerifyOTP from "./RecidentsPages/forgotverifyotp";
 import Register from "./pages/AdminPages/AdminRegister";
+import About from "./pages/AboutUs";
+import SecurityLandingPage from "./pages/security";
+import ContactPage from "./pages/ContactPage";
 
 function App() {
   return (
@@ -37,6 +40,9 @@ function App() {
 
         {/* Home (Public Always) */}
         <Route path="/" element={<Home />} />
+        <Route path="about" element={<About/>}/>
+        <Route path="/security" element={<SecurityLandingPage/>}/>
+        <Route path="/contact" element={<ContactPage/>}/>
 
         {/* Admin Public */}
         <Route path="admin-register" element={

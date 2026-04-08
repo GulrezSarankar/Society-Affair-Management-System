@@ -70,7 +70,7 @@ export default function ForgotVerifyOTP() {
             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md group-hover:scale-110 transition-transform">
               <ShieldCheck size={28} strokeWidth={2.5} />
             </div>
-            <span className="text-2xl font-bold tracking-tight uppercase italic">SocietySync</span>
+            <span className="text-2xl font-bold tracking-tight uppercase italic">Society Affair Management System</span>
           </div>
           
           <h1 className="text-5xl lg:text-7xl font-black leading-[1.1] tracking-tight mb-8">

@@ -93,7 +93,7 @@ function ResidentsLogin() {
              <div className="p-3 bg-blue-600 rounded-2xl shadow-xl mb-4">
                 <Building2 className="text-white" size={28} />
              </div>
-             <h2 className="text-2xl font-bold text-slate-900 tracking-tighter italic">SocietySync</h2>
+             <h2 className="text-2xl font-bold text-slate-900 tracking-tighter italic">Society Affair Management System</h2>
           </div>
 
           <div className="mb-10">

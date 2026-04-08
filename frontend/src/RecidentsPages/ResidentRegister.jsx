@@ -85,7 +85,7 @@ const ResidentRegister = () => {
              <div className="p-3 bg-blue-600 rounded-2xl shadow-xl mb-4">
                 <Building2 className="text-white" size={28} />
              </div>
-             <h2 className="text-2xl font-bold text-slate-900">SocietySync</h2>
+             <h2 className="text-2xl font-bold text-slate-900">Society Affair Management System</h2>
           </div>
 
           <div className="mb-10">
@@ -110,7 +110,7 @@ const ResidentRegister = () => {
                   type="text"
                   name="name"
                   required
-                  placeholder="e.g. Gulrez Sarankar"
+                  placeholder="e.g. Your Name"
                   className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
                   onChange={handleChange}
                 />

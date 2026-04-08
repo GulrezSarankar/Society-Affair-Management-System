@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Bell,
   CheckCircle2,
@@ -8,7 +8,8 @@ import {
   RefreshCw,
   Clock,
   ShieldCheck,
-  Menu
+  Menu,
+  UserPlus
 } from "lucide-react";
 import API from "../services/api";
 import ResidentSidebar from "./components/ResidentSidebar";
@@ -17,14 +18,24 @@ export default function ResidentVisitorApproval() {
   const [visitors, setVisitors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Use a ref for the interval to clean it up properly
+  const pollingRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  // Safely get user data
+  const user = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}");
+    } catch {
+      return {};
+    }
+  }, []);
 
-  // 🔥 FETCH VISITORS
-  const fetchVisitors = useCallback(async () => {
+  // --- FETCH VISITORS ---
+  const fetchVisitors = useCallback(async (showLoader = false) => {
     if (!user?.id) return;
+    if (showLoader) setLoading(true);
 
-    setLoading(true);
     try {
       const res = await API.get(`/watchman/my-requests/${user.id}`);
       setVisitors(res.data || []);
@@ -35,134 +46,159 @@ export default function ResidentVisitorApproval() {
     }
   }, [user?.id]);
 
-  // 🔥 APPROVE / REJECT (ONLY ONE FUNCTION ✅)
+  // --- RESPOND (With Optimistic UI) ---
   const respond = async (id, status) => {
+    // 1. Store previous state for rollback
+    const previousVisitors = [...visitors];
+
+    // 2. Optimistically update the UI
+    setVisitors(prev =>
+      prev.map(v => (v.id === id ? { ...v, status: status } : v))
+    );
+
     try {
       await API.put(`/watchman/respond/${id}?status=${status}`);
-      fetchVisitors();
+      // Optional: fetchVisitors() to sync with server time
     } catch (err) {
       console.error("Response Error:", err);
-      alert("Failed to update status");
+      alert("Failed to update status. Please try again.");
+      // 3. Rollback on failure
+      setVisitors(previousVisitors);
     }
   };
 
-  // 🔥 AUTO REFRESH
+  // --- POLLING LOGIC ---
   useEffect(() => {
-    fetchVisitors();
-    const interval = setInterval(fetchVisitors, 5000);
-    return () => clearInterval(interval);
+    fetchVisitors(true);
+
+    pollingRef.current = setInterval(() => {
+      // Only fetch if the tab is actually active/visible
+      if (document.visibilityState === "visible") {
+        fetchVisitors();
+      }
+    }, 5000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [fetchVisitors]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
-
       {/* SIDEBAR */}
       <ResidentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* MAIN */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 lg:ml-64">
-
+        
         {/* HEADER */}
-        <header className="sticky top-0 z-30 bg-white border-b p-4 flex justify-between items-center">
+        <header className="sticky top-0 z-30 bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden"
+              className="lg:hidden p-2 hover:bg-slate-100 rounded-full transition-colors"
             >
-              <Menu />
+              <Menu size={24} />
             </button>
 
             <div className="flex items-center gap-2">
-              <ShieldCheck className="text-blue-600" />
-              <h1 className="font-bold">Gate Access</h1>
+              <ShieldCheck className="text-blue-600" size={28} />
+              <h1 className="font-bold text-xl tracking-tight text-slate-800">Gate Access</h1>
             </div>
           </div>
 
-          <button onClick={fetchVisitors}>
-            <RefreshCw className={loading ? "animate-spin" : ""} />
+          <button 
+            onClick={() => fetchVisitors(true)}
+            className="p-2 hover:bg-slate-100 rounded-full transition-all active:scale-90"
+            disabled={loading}
+          >
+            <RefreshCw className={`${loading ? "animate-spin text-blue-600" : "text-slate-500"}`} size={20} />
           </button>
         </header>
 
-        {/* CONTENT */}
         <div className="p-6 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-slate-700 flex items-center gap-2">
+              <Bell className="text-blue-600" size={20} />
+              Incoming Requests
+            </h2>
+            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+              Live Updates Active
+            </span>
+          </div>
 
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-            <Bell className="text-blue-600" />
-            Visitor Requests
-          </h2>
-
-          {/* LIST */}
+          {/* VISITOR LIST */}
           {visitors.length > 0 ? (
-            visitors.map((v) => (
-              <div key={v.id} className="bg-white p-4 mb-4 rounded shadow">
+            <div className="space-y-4">
+              {visitors.map((v) => (
+                <div 
+                  key={v.id} 
+                  className={`bg-white p-5 rounded-xl shadow-sm border-l-4 transition-all ${
+                    v.status === 'PENDING' ? 'border-amber-400' : 
+                    v.status === 'APPROVED' ? 'border-green-500' : 'border-red-500'
+                  }`}
+                >
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    
+                    {/* VISITOR INFO */}
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-lg text-slate-800">{v.name}</h3>
+                      <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                        <span className="flex items-center gap-1.5">
+                          <Phone size={14} className="text-slate-400" /> {v.phone}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Info size={14} className="text-slate-400" /> {v.purpose || "General Visit"}
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="flex justify-between items-center">
-
-                  {/* INFO */}
-                  <div>
-                    <h3 className="font-bold text-lg">{v.name}</h3>
-
-                    <p className="text-sm text-gray-500 flex gap-2">
-                      <Phone size={14} /> {v.phone}
-                    </p>
-
-                    <p className="text-sm text-gray-500 flex gap-2">
-                      <Info size={14} /> {v.purpose || "Visit"}
-                    </p>
+                    {/* ACTION BUTTONS / STATUS */}
+                    <div className="w-full sm:w-auto">
+                      {v.status === "PENDING" ? (
+                        <div className="flex gap-2 w-full">
+                          <button
+                            onClick={() => respond(v.id, "REJECTED")}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                          >
+                            Deny
+                          </button>
+                          <button
+                            onClick={() => respond(v.id, "APPROVED")}
+                            className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-shadow shadow-md active:shadow-none"
+                          >
+                            Approve
+                          </button>
+                        </div>
+                      ) : (
+                        <div className={`flex items-center gap-1.5 font-bold px-3 py-1 rounded-full ${
+                          v.status === "APPROVED" ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"
+                        }`}>
+                          {v.status === "APPROVED" ? (
+                            <><CheckCircle2 size={18} /> Approved</>
+                          ) : (
+                            <><XCircle size={18} /> Rejected</>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {/* ACTION */}
-                  <div>
-
-                    {v.status === "PENDING" && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => respond(v.id, "REJECTED")}
-                          className="bg-red-500 text-white px-3 py-1 rounded"
-                        >
-                          Reject
-                        </button>
-
-                        <button
-                          onClick={() => respond(v.id, "APPROVED")}
-                          className="bg-green-500 text-white px-3 py-1 rounded"
-                        >
-                          Approve
-                        </button>
-                      </div>
-                    )}
-
-                    {v.status === "APPROVED" && (
-                      <span className="text-green-600 flex items-center gap-1">
-                        <CheckCircle2 size={16} /> Approved
-                      </span>
-                    )}
-
-                    {v.status === "REJECTED" && (
-                      <span className="text-red-600 flex items-center gap-1">
-                        <XCircle size={16} /> Rejected
-                      </span>
-                    )}
-
+                  {/* FOOTER INFO */}
+                  <div className="mt-4 pt-3 border-t border-slate-50 flex items-center text-xs text-slate-400">
+                    <Clock size={12} className="mr-1" />
+                    <span>Requested: {v.created_at ? new Date(v.created_at).toLocaleTimeString() : "Just now"}</span>
                   </div>
                 </div>
-
-                {/* TIME */}
-                <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                  <Clock size={12} />
-                  {v.created_at
-                    ? new Date(v.created_at).toLocaleString()
-                    : "Just now"}
-                </p>
-
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <div className="text-center text-gray-500 mt-10">
-              No visitor requests
+            <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+              <UserPlus size={48} className="mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-500 font-medium">No visitor requests at the moment.</p>
+              <p className="text-slate-400 text-sm">New requests will appear here automatically.</p>
             </div>
           )}
-
         </div>
       </main>
     </div>
