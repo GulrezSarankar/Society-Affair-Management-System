@@ -69,7 +69,7 @@ export default function ContactPage() {
             <GlassCard 
               icon={<Phone className="text-blue-600" size={20} />}
               title="Quick Support"
-              detail="+91 7249824042"
+              detail="+91 8767581608"
               label="24/7 Helpline"
             />
             <GlassCard 
@@ -81,7 +81,7 @@ export default function ContactPage() {
             <GlassCard 
               icon={<Globe className="text-blue-600" size={20} />}
               title="Visit Us"
-              detail="Panvel, Maharashtra"
+              detail="Mahad, Maharashtra"
               label="Main Tech Hub"
             />
 
