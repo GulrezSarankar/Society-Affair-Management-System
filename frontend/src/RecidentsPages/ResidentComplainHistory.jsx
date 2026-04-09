@@ -11,7 +11,7 @@ const ResidentComplaintHistory = () => {
   const fetchComplaints = async () => {
     try {
       const res = await API.get("/resident/my-complaints");
-      setData(res.data);
+      setData(res.data.complaints); // ✅ FIX
     } catch (err) {
       console.error(err);
 
@@ -41,16 +41,11 @@ const ResidentComplaintHistory = () => {
 
   return (
     <div className="flex bg-gray-100 min-h-screen">
-
       {/* SIDEBAR */}
-      <ResidentSidebar 
-        isOpen={isSidebarOpen} 
-        setIsOpen={setIsSidebarOpen} 
-      />
+      <ResidentSidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
       {/* MAIN */}
       <div className={`flex-1 ${isSidebarOpen ? "blur-sm lg:blur-none" : ""}`}>
-
         {/* MOBILE HEADER */}
         <div className="lg:hidden bg-white p-4 flex justify-between shadow">
           <h1 className="font-bold">My Complaints</h1>
@@ -60,7 +55,6 @@ const ResidentComplaintHistory = () => {
         </div>
 
         <div className="p-6 lg:ml-64">
-
           <h1 className="text-2xl font-bold mb-6">Complaint History</h1>
 
           {loading ? (
@@ -70,11 +64,10 @@ const ResidentComplaintHistory = () => {
           ) : (
             data.map((c) => (
               <div key={c.id} className="bg-white p-4 mb-4 rounded shadow">
-
                 {/* IMAGE */}
                 {c.image && (
                   <img
-                    src={`http://127.0.0.1:8000${c.image}`}
+                    src={c.image}
                     alt="complaint"
                     className="w-40 h-40 object-cover mb-3 rounded"
                   />
@@ -88,11 +81,9 @@ const ResidentComplaintHistory = () => {
                 <p className={`mt-2 font-semibold ${getStatusColor(c.status)}`}>
                   Status: {c.status}
                 </p>
-
               </div>
             ))
           )}
-
         </div>
       </div>
     </div>

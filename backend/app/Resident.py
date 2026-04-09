@@ -7,7 +7,27 @@ from fastapi import UploadFile, File, Form
 import shutil
 import os
 import uuid
+import boto3
+from botocore.exceptions import NoCredentialsError
+from dotenv import load_dotenv
 
+
+BUCKET_NAME = "society-app-images"
+AWS_REGION = "ap-south-1"
+
+load_dotenv()
+
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=AWS_REGION
+)
 
 router = APIRouter(prefix="/resident", tags=["Resident/User"])
 
@@ -236,66 +256,103 @@ def create_complaint(
     user=Depends(utils.get_current_user),
     db: Session = Depends(get_db)
 ):
-    db_user = db.query(models.User).filter(
-        models.User.email == user.get("sub")
-    ).first()
+    try:
+        # ✅ Validate user
+        if not user or "sub" not in user:
+            raise HTTPException(status_code=401, detail="Invalid user")
 
-    #  ABSOLUTE PATH FIX (IMPORTANT)
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    UPLOAD_DIR = os.path.join(BASE_DIR, "..", "uploads")
+        db_user = db.query(models.User).filter(
+            models.User.email == user.get("sub")
+        ).first()
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    image_path = None
+        # ✅ IMPORTANT: Check AWS config (fixes your NoneType error)
+        if not BUCKET_NAME or not AWS_REGION:
+            print("🔥 AWS CONFIG ERROR:", BUCKET_NAME, AWS_REGION)
+            raise HTTPException(
+                status_code=500,
+                detail="AWS configuration missing. Check .env file"
+            )
 
-    if image:
-        # CLEAN NAME + UNIQUE
-        clean_name = image.filename.replace(" ", "_")
-        filename = f"{uuid.uuid4()}_{clean_name}"
+        image_url = None
 
-        file_path = os.path.join(UPLOAD_DIR, filename)
+        # ✅ Handle image upload
+        if image and image.filename:
+            if image.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
+                raise HTTPException(status_code=400, detail="Only JPG/PNG allowed")
 
-        #  SAVE FILE
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
+            filename = f"complaints/{uuid.uuid4()}_{image.filename.replace(' ', '_')}"
 
-        # 🔥 STORE PUBLIC PATH
-        image_path = f"/uploads/{filename}"
+            try:
+                image.file.seek(0)
 
-        print("Saved at:", file_path)  # debug
+                s3.upload_fileobj(
+                    image.file,
+                    BUCKET_NAME,
+                    filename,
+                    ExtraArgs={"ContentType": image.content_type}
+                )
 
-    complaint = models.Complaint(
-        title=title,
-        description=description,
-        image=image_path,
-        user_id=db_user.id
-    )
+                # ✅ Safe URL creation
+                image_url = f"https://{BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{filename}"
 
-    db.add(complaint)
-    db.commit()
+            except Exception as e:
+                print("🔥 S3 ERROR:", repr(e))
+                raise HTTPException(status_code=500, detail=f"S3 Error: {str(e)}")
 
-    return {"message": "Complaint submitted successfully"}
+        # ✅ Save complaint
+        complaint = models.Complaint(
+            title=title,
+            description=description,
+            image=image_url,
+            user_id=db_user.id
+        )
 
+        db.add(complaint)
+        db.commit()
+        db.refresh(complaint)
+
+        return {
+            "message": "Complaint submitted successfully",
+            "image": image_url
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print("🔥 MAIN ERROR:", repr(e))
+        raise HTTPException(status_code=500, detail=str(e))
 @router.get("/my-complaints")
 def my_complaints(user=Depends(utils.get_current_user), db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(
         models.User.email == user.get("sub")
     ).first()
 
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
     complaints = db.query(models.Complaint).filter(
         models.Complaint.user_id == db_user.id
     ).all()
 
-    return [
-        {
-            "id": c.id,
-            "title": c.title,
-            "description": c.description,
-            "status": c.status,
-            "image": c.image
-        }
-        for c in complaints
-    ]
+    return {
+        "count": len(complaints),
+        "complaints": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "description": c.description,
+                "status": c.status,
+                "image": c.image,
+                "has_image": bool(c.image)
+            }
+            for c in complaints
+        ]
+    }
+
 
 # @router.get("/my-complaints")
 # def my_complaints(user=Depends(utils.get_current_user), db: Session = Depends(get_db)):
