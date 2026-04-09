@@ -8,6 +8,7 @@ from app.Resident import router as resident_router
 from fastapi.staticfiles import StaticFiles
 from app.Watchman import router as watchman_router
 import os
+from fastapi.middleware.cors import CORSMiddleware
 
 # Create uploads folder if not exists
 if not os.path.exists("uploads"):
@@ -21,9 +22,10 @@ app = FastAPI()
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://society-affair-management-system.vercel.app/",
-    "http://localhost:5173",   # Vite dev server
-    "http://localhost:3000"] , # change later to frontend URL
+    allow_origins=[
+        "http://localhost:5173",
+        "https://society-affair-management-system.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

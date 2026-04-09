@@ -32,8 +32,8 @@ BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 if not SECRET_KEY:
     raise Exception("❌ SECRET_KEY not set in .env")
 
-if not BREVO_EMAIL or not BREVO_API_KEY:
-    raise Exception("❌ Brevo credentials missing")
+# if not BREVO_EMAIL or not BREVO_API_KEY:
+#     raise Exception("❌ Brevo credentials missing")
 
 print("✅ ENV LOADED")
 
