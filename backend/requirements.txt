@@ -8,4 +8,5 @@ python-jose[cryptography]
 email-validator
 python-multipart
 boto3
+sib-api-v3-sdk
 
