@@ -21,7 +21,9 @@ app = FastAPI()
 # CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://society-affair-management-system.vercel.app/"],  # change later to frontend URL
+    allow_origins=["https://society-affair-management-system.vercel.app/",
+    "http://localhost:5173",   # Vite dev server
+    "http://localhost:3000"] , # change later to frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
