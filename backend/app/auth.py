@@ -20,7 +20,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/register")
 def register(user: schemas.RegisterSchema, db: Session = Depends(get_db)):
     try:
-        print("🔥 Incoming data:", user)
+        print("🔥 DATA:", user)
 
         existing_user = db.query(models.User).filter(models.User.email == user.email).first()
 
@@ -43,7 +43,7 @@ def register(user: schemas.RegisterSchema, db: Session = Depends(get_db)):
         return {"message": "Admin registered successfully"}
 
     except Exception as e:
-        print("❌ ERROR:", str(e))   # 👈 IMPORTANT
+        print("❌ REGISTER ERROR:", str(e))   # 🔥 IMPORTANT
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/login")
