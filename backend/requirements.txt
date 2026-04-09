@@ -9,4 +9,4 @@ email-validator
 python-multipart
 boto3
 sib-api-v3-sdk
-
+bcrypt==3.2.2
