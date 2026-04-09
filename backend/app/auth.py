@@ -11,7 +11,7 @@ from fastapi import Query
 from typing import Optional
 from fastapi import Query
 
-
+from app import utils  
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # =========================
